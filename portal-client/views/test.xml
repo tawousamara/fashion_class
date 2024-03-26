@@ -1,0 +1,267 @@
+<odoo>
+
+    <template id="portal_my_home_client" name="Partner Ledger" customize_show="True" inherit_id="portal.portal_my_home"
+              priority="20">
+
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Rapport solde client</t>
+                <t t-set="url" t-value="'/my/client'"/>
+                <t t-set="placeholder_count" t-value="'client_count'"/>
+
+
+            </t>
+        </xpath>
+    </template>
+
+
+    <template id="portal_my_client" name="My client">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+		    <t t-set="title">Rapport solde client</t>
+		    <button type="button" class="btn btn-secondary"  id="generate_pdf_button" >Export PDF</button>
+		    <button id="generate_excel_button" class="btn btn-primary">Export Excel</button>
+            </t>
+
+            <div class="o_searchview" style="display: flex; align-items: center;">
+                <div class="o_searchview_facets" style="display: flex;">
+                    <div class="o_searchview_facet" style="margin-right: 10px; margin-top: 10px">
+                        <label for="date_from">De:</label>
+                        <input type="date" id="date_from" name="date_from"/>
+                    </div>
+                    <div class="o_searchview_facet" style="margin-right: 10px; margin-top: 10px">
+                        <label for="date_to">À:</label>
+                        <input type="date" id="date_to" name="date_to"/>
+                    </div>
+                    <div class="o_searchview_facet">
+                        <button type="button" class="btn btn-primary" style="margin-bottom: 10px; margin-top: 5px" t-on-click="date_search">Filtrer</button>
+		    </div>
+	        </div>
+            </div>
+
+	    <t t-if="clients" t-call="portal.portal_table">
+
+                <thead>
+                    <tr class="active">
+                        <th class="text-end">Date</th>
+                        <th class="text-end">Référence</th>
+                        <th class="text-end">Libellé</th>
+                        <t t-foreach="curr" t-as="cur">
+
+                            <th class="text-end">Débit
+                                <span t-esc="cur.name"/>
+                            </th>
+                              <th class="text-end">Crédit
+                                <span t-esc="cur.name"/>
+                            </th>
+                            <th class="text-end">Solde
+                                <span t-esc="cur.name"/>
+                            </th>
+                        </t>
+                    </tr>
+                </thead>
+
+                <t t-foreach="total" t-as="t">
+                    <tr style="background: #68b581;">
+
+                        <td class="text-end">
+
+                            <span t-esc="t['total']"/>
+
+
+                        </td>
+                        <td class="text-end">
+
+                            <span t-esc="t['inv']"/>
+
+                        </td>
+                        <td class="text-end">
+
+                            <span t-esc="t['inv']"/>
+
+                        </td>
+                        <t t-foreach="curr" t-as="cur">
+                            <td class="text-end">
+                                <t t-if="t['currency'] == cur.name">
+                                    <span t-esc="t['debit_total']"/>
+
+                                </t>
+                            </td>
+                            <td class="text-end">
+                                <t t-if="t['currency'] == cur.name">
+                                    <span t-esc="t['credit_total']"/>
+
+                                </t>
+                            </td>
+
+                            <td class="text-end">
+                                <t t-if="t['currency'] == cur.name">
+                                    <span t-esc="t['balance_total']"/>
+
+                                </t>
+                            </td>
+
+                        </t>
+                    </tr>
+                </t>
+
+                <t t-foreach="debit_list" t-as="client">
+
+
+                        <tr t-attf-style="background: {{client['color']}}">
+                            <td class="text-end">
+                                <span t-esc="client['date']"/>
+
+                            </td>
+                            <td class="text-end">
+                                <p t-esc="client['ref']" style="margin=-5px;"/>
+
+                            </td>
+                            <td class="text-end">
+
+                                    <span t-esc="client['type']"/>
+
+
+                            </td>
+
+                            <t t-foreach="curr" t-as="cur">
+                                 <td class="text-end">
+
+                                    <t t-if="'s' not in client['debit']">
+                                        <t t-if="client['currency'] == cur.name">
+
+                                            <span t-esc="client['debit']"/>
+                                            <span t-esc="cur.symbol"/>
+                                        </t>
+                                    </t>
+                                    <t t-else=""></t>
+
+
+                                </td>
+                                <td class="text-end">
+
+
+                                    <t t-if="'s' not in client['credit']">
+                                        <t t-if="client['currency'] == cur.name">
+                                            <span t-esc="client['credit']"/>
+                                            <span t-esc="cur.symbol"/>
+                                        </t>
+                                    </t>
+                                    <t t-else=""></t>
+
+
+                                </td>
+
+                                <td class="text-end">
+                                    <t t-if="client['currency'] == cur.name">
+
+                                        <span t-esc="client['sold']"/>
+                                        <span t-esc="cur.symbol"/>
+                                    </t>
+
+
+                                </td>
+                            </t>
+
+
+                        </tr>
+
+
+
+                </t>
+
+            </t>
+            <p t-else="">There are currently no partner ledger for you.</p>
+        </t>
+    </template>
+
+
+    <template id="portal_layout_client" name="Portal layout: project menu entry" inherit_id="portal.portal_breadcrumbs"
+              priority="40">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'client' or client" class="col-lg-2"
+                t-attf-class="breadcrumb-item #{'active ' if not client else ''}">
+
+                <t>Rapport solde client</t>
+            </li>
+        </xpath>
+
+    </template>
+    <template id="portal_my_home_payment" name="Payment client" customize_show="True" inherit_id="portal.portal_my_home"
+              priority="50">
+
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="title">Paiement client</t>
+                <t t-set="url" t-value="'/my/payment'"/>
+                <t t-set="placeholder_count" t-value="'payment_count'"/>
+
+            </t>
+        </xpath>
+    </template>
+
+
+    <template id="portal_my_payment" name="My payment">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Paiement client</t>
+            </t>
+            <t t-if="payments" t-call="portal.portal_table">
+                <!-- <t t-set="qty" t-value="0">-->
+                <thead>
+                    <tr class="active">
+
+                        <th class="text-end">Référence</th>
+                        <th class="text-end">Libellé</th>
+                        <th class="text-end">Date</th>
+                        <th class="text-end">Montant</th>
+
+
+                    </tr>
+                </thead>
+
+
+                <t t-foreach="payments" t-as="payment">
+                    <tr>
+
+                        <td class="text-end">
+                            <span t-field="payment.display_name"/>
+
+                        </td>
+                        <td class="text-end">
+                            <span t-field="payment.ref"/>
+                        </td>
+
+                        <td class="text-end">
+                            <span t-field="payment.date"/>
+
+                        </td>
+                        <td class="text-end">
+                            <span t-field="payment.amount"/>
+                        </td>
+
+
+                    </tr>
+                </t>
+            </t>
+            <p t-else="">There are currently no quotations for your account.</p>
+        </t>
+    </template>
+    <template id="portal_layout_payment" name="Portal layout: project menu entry" inherit_id="portal.portal_breadcrumbs"
+              priority="50">
+        <xpath expr="//ol[hasclass('o_portal_submenu')]" position="inside">
+            <li t-if="page_name == 'payment' or payment" class="col-lg-2"
+                t-attf-class="breadcrumb-item #{'active ' if not client else ''}">
+
+                <t>Paiement client</t>
+            </li>
+        </xpath>
+
+    </template>
+
+</odoo>
